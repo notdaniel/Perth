@@ -179,8 +179,18 @@ def calculate_audio_metrics(original: np.ndarray, watermarked: np.ndarray) -> Di
         - mse: Mean Squared Error
         - psnr: Peak Signal-to-Noise Ratio (dB)
     """
-    if len(original) != len(watermarked):
-        raise ValueError("Original and watermarked audio must have the same length")
+    # Allow for small length differences (up to 1% or 1 second of audio)
+    len_diff = abs(len(original) - len(watermarked))
+    max_len = max(len(original), len(watermarked))
+    
+    # If difference is more than 1% of length or more than 1 second worth of samples (assuming typical sample rates)
+    if len_diff > max(max_len * 0.01, 48000):  # 48000 samples = 1 second at 48kHz
+        raise ValueError(f"Audio length mismatch too large: {len(original)} vs {len(watermarked)} samples (diff: {len_diff})")
+    
+    # Trim to minimum length for comparison
+    min_len = min(len(original), len(watermarked))
+    original = original[:min_len]
+    watermarked = watermarked[:min_len]
     
     # Calculate Mean Squared Error
     mse = np.mean((original - watermarked) ** 2)
