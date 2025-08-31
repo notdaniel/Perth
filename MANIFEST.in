@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+recursive-include perth/perth_net/pretrained *
+recursive-include perth *.py
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store

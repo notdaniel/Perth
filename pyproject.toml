@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "resemble-perth"
+version = "1.0.2"
+description = "Audio Watermarking and Detection Library"
+readme = "README.md"
+requires-python = ">=3.9,<3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "Resemble AI", email = "team@resemble.ai"},
+    {name = "Aditya", email = "aditya@resemble.ai"},
+]
+keywords = ["Audio Watermarking", "Perceptual Watermarking", "Neural Networks", "Audio Processing"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "bitstring",
+    "matplotlib",
+    "librosa>=0.10.0",
+    "numpy>=1.23.4,<2.0",
+    "pandas>=1.5.0",
+    "Pillow>=9.0.1",
+    "praat-parselmouth",
+    "pydub",
+    "pyloudnorm>=0.1.0",
+    "pyrubberband",
+    "PyWavelets>=1.1.1",
+    "scikit-learn>=1.0",
+    "SoundFile>=0.10.3.post1",
+    "sox>=1.4.0",
+    "tabulate>=0.8.9",
+    "tqdm>=4.61.2",
+    "tensorboard>=2.10.1",
+    "pyYaml>=5.4.1",
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/resemble-ai/Perth"
+Documentation = "https://github.com/resemble-ai/Perth/blob/main/README.md"
+Repository = "https://github.com/resemble-ai/Perth"
+Issues = "https://github.com/resemble-ai/Perth/issues"
+
+[project.scripts]
+perth = "perth.cli.watermark_cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["perth"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/perth",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
