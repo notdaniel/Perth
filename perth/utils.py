@@ -86,19 +86,20 @@ def validate_string_watermark(watermark: str) -> bool:
     return any([char not in ("1", "0") for char in watermark])
 
 
-def load_audio(audio_path: str, sr: Optional[int] = None) -> Tuple[np.ndarray, int]:
+def load_audio(audio_path: str, sr: Optional[int] = None, mono: bool = False) -> Tuple[np.ndarray, int]:
     """
     Load an audio file using librosa.
     
     Args:
         audio_path: Path to the audio file
         sr: Target sample rate. If None, the native sample rate is used.
+        mono: If True, convert to mono. If False, preserve original channels.
         
     Returns:
         Tuple of (audio_data, sample_rate)
     """
     try:
-        audio, sample_rate = librosa.load(audio_path, sr=sr)
+        audio, sample_rate = librosa.load(audio_path, sr=sr, mono=mono)
         return audio, sample_rate
     except Exception as e:
         raise IOError(f"Could not load audio file {audio_path}: {e}")
@@ -109,12 +110,17 @@ def save_audio(audio_data: np.ndarray, file_path: str, sample_rate: int) -> None
     Save audio data to a file.
     
     Args:
-        audio_data: Audio data as a numpy array
+        audio_data: Audio data as a numpy array (shape: (samples,) for mono or (channels, samples) for multi-channel)
         file_path: Output file path
         sample_rate: Sample rate for the audio file
     """
     directory = os.path.dirname(os.path.abspath(file_path))
     os.makedirs(directory, exist_ok=True)
+    
+    # soundfile expects (samples, channels) for multi-channel audio
+    if audio_data.ndim == 2:
+        audio_data = audio_data.T
+    
     sf.write(file_path, audio_data, sample_rate)
 
 
@@ -179,18 +185,27 @@ def calculate_audio_metrics(original: np.ndarray, watermarked: np.ndarray) -> Di
         - mse: Mean Squared Error
         - psnr: Peak Signal-to-Noise Ratio (dB)
     """
+    # Handle both mono and multi-channel audio
+    # For multi-channel, shape is (channels, samples), for mono it's (samples,)
+    orig_samples = original.shape[-1]  # Last dimension is always samples
+    wm_samples = watermarked.shape[-1]
+    
     # Allow for small length differences (up to 1% or 1 second of audio)
-    len_diff = abs(len(original) - len(watermarked))
-    max_len = max(len(original), len(watermarked))
+    len_diff = abs(orig_samples - wm_samples)
+    max_len = max(orig_samples, wm_samples)
     
     # If difference is more than 1% of length or more than 1 second worth of samples (assuming typical sample rates)
     if len_diff > max(max_len * 0.01, 48000):  # 48000 samples = 1 second at 48kHz
-        raise ValueError(f"Audio length mismatch too large: {len(original)} vs {len(watermarked)} samples (diff: {len_diff})")
+        raise ValueError(f"Audio length mismatch too large: {orig_samples} vs {wm_samples} samples (diff: {len_diff})")
     
     # Trim to minimum length for comparison
-    min_len = min(len(original), len(watermarked))
-    original = original[:min_len]
-    watermarked = watermarked[:min_len]
+    min_len = min(orig_samples, wm_samples)
+    if original.ndim == 2:
+        original = original[:, :min_len]
+        watermarked = watermarked[:, :min_len]
+    else:
+        original = original[:min_len]
+        watermarked = watermarked[:min_len]
     
     # Calculate Mean Squared Error
     mse = np.mean((original - watermarked) ** 2)

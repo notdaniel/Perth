@@ -23,13 +23,14 @@ class CorruptedAudioException(Exception):
     pass
 
 
-def load_wav(fpath, target_sr, res_algo="kaiser_best"):
+def load_wav(fpath, target_sr, res_algo="kaiser_best", mono=False):
     """
     :param target_sr: expected sample rate after loading and possibly resampling. If None,
     there will be no resampling.
     :param res_algo: algorithm for resampling. If None, there will also be no resampling but if
     the target_sr is valid, the actual sample rate of the audio on disk will be checked against
     and an error will be thrown if they do not match.
+    :param mono: If True, convert to mono. If False, preserve original channels.
     """
     bit_depth = sf.SoundFile(str(fpath)).subtype
     if not bit_depth.startswith("PCM"):
@@ -39,7 +40,7 @@ def load_wav(fpath, target_sr, res_algo="kaiser_best"):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             wav, actual_sr = librosa.core.load(
-                str(fpath), sr=(target_sr if res_algo else None), res_type=res_algo
+                str(fpath), sr=(target_sr if res_algo else None), res_type=res_algo, mono=mono
             )
     except (EOFError, NoBackendError):
         raise CorruptedAudioException("Failed to load audio file")

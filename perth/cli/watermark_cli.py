@@ -58,9 +58,14 @@ def main(args: Optional[List[str]] = None) -> int:
     device = config.get('perth', 'device')
     
     try:
-        # Load audio file
+        # Load audio file (preserve channels)
         print(f"Loading audio file: {parsed_args.input_file}")
-        wav, sr = load_audio(parsed_args.input_file)
+        wav, sr = load_audio(parsed_args.input_file, mono=False)
+  
+        if wav.ndim == 2:
+            print(f"Multi-channel audio: {wav.shape[0]} channels, {wav.shape[1]} samples")
+        elif wav.ndim == 1:
+            print(f"Mono audio: {wav.shape[0]} samples")
         
         # Initialize watermarker
         if method == "perth":
